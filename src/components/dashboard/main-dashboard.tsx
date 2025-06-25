@@ -1,6 +1,5 @@
 
 "use client";
-import AqiForecast from "./aqi-forecast";
 import AqiMap from "./aqi-map";
 import HistoricalTrendsChart from "./historical-trends-chart";
 import WeatherCard from "./weather-card";
@@ -21,7 +20,6 @@ export default function MainDashboard({ aqiData, weatherData }: { aqiData: any, 
           <HourlyForecast weatherData={weatherData} />
           <AqiMap />
           <HistoricalTrendsChart aqiData={aqiData} />
-          <AqiForecast aqiData={aqiData} weatherData={weatherData} />
         </div>
         {/* Right Sidebar Column */}
         <div className="lg:col-span-1 xl:col-span-1 space-y-6">

@@ -1,22 +1,6 @@
 
 "use server";
 
-import type { z } from "genkit/zod";
-import { predictAirQuality, type PredictAirQualityInput, type PredictAirQualityOutput } from "@/ai/flows/predict-aqi-flow";
-
-export async function getAqiPrediction(input: PredictAirQualityInput): Promise<PredictAirQualityOutput> {
-  try {
-    const result = await predictAirQuality(input);
-    if (!result) {
-        throw new Error('The AI model returned an empty result.');
-    }
-    return result;
-  } catch (error) {
-    console.error("Error getting AQI prediction:", error);
-    throw new Error("An unexpected error occurred while generating the forecast. Please try again later.");
-  }
-}
-
 async function fetchWithToken(url: string, tokenName: string, isJson: boolean = true) {
   const token = process.env[tokenName];
   if (!token) {
