@@ -3,12 +3,11 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { BarChart3, BrainCircuit, LayoutDashboard, Map, Menu, Search, ShieldAlert, Wind } from "lucide-react";
+import { BarChart3, BrainCircuit, LayoutDashboard, Map, Menu, Search, Wind } from "lucide-react";
 import Link from "next/link";
 import { useLocation } from "@/hooks/use-location";
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet";
 import { Button } from "../ui/button";
-import HealthAdvisory from "../dashboard/health-advisory";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -68,9 +67,6 @@ export function Header() {
                            );
                         })}
                     </nav>
-                    <div className="mt-auto">
-                        <HealthAdvisory />
-                    </div>
                 </SheetContent>
             </Sheet>
             <Link href="/" className="hidden md:flex items-center gap-2 text-foreground no-underline">

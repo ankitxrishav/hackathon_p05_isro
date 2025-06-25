@@ -3,11 +3,9 @@
 
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
-import { Wind, LayoutDashboard, BarChart3, BrainCircuit, LogOut, Map, ShieldAlert } from 'lucide-react';
+import { Wind, LayoutDashboard, BarChart3, BrainCircuit, LogOut, Map } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import HealthAdvisory from "../dashboard/health-advisory";
 
 const navLinks = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -60,31 +58,6 @@ export function Sidebar() {
         {navLinks.map(renderLink)}
       </nav>
       <div className="mt-auto flex flex-col items-center gap-4">
-        <Dialog>
-            <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <DialogTrigger asChild>
-                            <button className="flex items-center justify-center h-12 w-12 rounded-lg transition-colors hover:bg-primary/20 hover:text-primary text-muted-foreground">
-                                <ShieldAlert className="h-6 w-6" />
-                                <span className="sr-only">Health Advisory</span>
-                            </button>
-                        </DialogTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent side="right"><p>Health Advisory</p></TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-            <DialogContent className="max-w-md">
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <ShieldAlert className="w-6 h-6 text-primary" />
-                        Health Advisory
-                    </DialogTitle>
-                </DialogHeader>
-                <HealthAdvisory />
-            </DialogContent>
-        </Dialog>
-
         {bottomLinks.map(renderLink)}
       </div>
     </aside>

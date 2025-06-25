@@ -1,5 +1,6 @@
 
 "use client";
+import HealthAdvisory from "./health-advisory";
 import HistoricalTrendsChart from "./historical-trends-chart";
 import WeatherCard from "./weather-card";
 import HourlyForecast from "./hourly-forecast";
@@ -19,6 +20,7 @@ export default function MainDashboard({ aqiData, weatherData }: { aqiData: any, 
         </div>
         {/* Right Sidebar Column */}
         <div className="lg:col-span-1 xl:col-span-1 space-y-6">
+          <HealthAdvisory />
           <TodayHighlights weatherData={weatherData} aqiData={aqiData} />
           <SunriseCard weatherData={weatherData} />
           <OtherCitiesCard />
