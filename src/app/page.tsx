@@ -1,20 +1,52 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
-import AqiMap from "@/components/dashboard/aqi-map";
-import CurrentAqiCard from "@/components/dashboard/current-aqi-card";
-import HealthAdvisory from "@/components/dashboard/health-advisory";
-import { getAqiDataForLocation } from "./actions";
+import { useState, useEffect, useCallback } from "react";
+import MainDashboard from "@/components/dashboard/main-dashboard";
+import { getAqiDataForLocation, getWeatherDataForLocation } from "./actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export type ViewType = 'dashboard' | 'map' | 'trends' | 'forecast';
 
 export default function Home() {
   const [aqiData, setAqiData] = useState<any>(null);
+  const [weatherData, setWeatherData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [view, setView] = useState<ViewType>('dashboard');
 
-  useEffect(() => {
+  const handleFetchData = useCallback((lat: number, lon: number) => {
+    setIsLoading(true);
+    setError(null);
+    Promise.all([
+      getAqiDataForLocation(lat, lon),
+      getWeatherDataForLocation(lat, lon),
+    ]).then(([aqiResult, weatherResult]) => {
+      if (aqiResult && aqiResult.status === "ok") {
+        setAqiData(aqiResult.data);
+      } else {
+        setError(aqiResult.data || 'Could not fetch AQI data.');
+      }
+
+      if (weatherResult && weatherResult.status === "ok") {
+        setWeatherData(weatherResult);
+      } else {
+        setError(weatherResult.data || 'Could not fetch weather data.');
+      }
+    }).catch(e => {
+      console.error(e);
+      setError("An unexpected error occurred while fetching data.");
+    }).finally(() => {
+      setIsLoading(false);
+    });
+  }, []);
+  
+  const getLocation = useCallback(() => {
+    setIsLoading(true);
+    setError(null);
     if (!("geolocation" in navigator)) {
       setError("Geolocation is not supported by your browser.");
       setIsLoading(false);
@@ -22,64 +54,73 @@ export default function Home() {
     }
 
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const data = await getAqiDataForLocation(
-            position.coords.latitude,
-            position.coords.longitude
-          );
-          if (data && data.status === "ok") {
-            setAqiData(data.data);
-          } else {
-            const errorMessage = typeof data.data === 'string' ? data.data : 'Could not fetch AQI data.';
-            setError(`${errorMessage} Ensure your AQI_API_TOKEN is set in the .env file.`);
-          }
-        } catch (e) {
-          setError("Failed to fetch AQI data.");
-        } finally {
-          setIsLoading(false);
-        }
+      (position) => {
+        handleFetchData(position.coords.latitude, position.coords.longitude);
       },
       (geoError) => {
-        setError("Unable to retrieve your location. Please grant permission and refresh.");
+        setError("Unable to retrieve your location. Please grant permission and try again.");
         setIsLoading(false);
       }
     );
-  }, []);
+  }, [handleFetchData]);
 
-  const currentAqi = aqiData?.aqi;
+  useEffect(() => {
+    getLocation();
+  }, [getLocation]);
 
-  return (
-    <main className="flex-1 p-4 md:p-6 lg:p-8 grid gap-6 grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 container">
-      <div className="lg:col-span-2 xl:col-span-3 space-y-6">
-        <div className="animate-in fade-in duration-500">
-          <AqiMap />
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="md:col-span-2 space-y-6">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+          <div className="space-y-6">
+            <Skeleton className="h-96 w-full" />
+            <Skeleton className="h-72 w-full" />
+          </div>
         </div>
-      </div>
-      <div className="lg:col-span-1 xl:col-span-1 space-y-6">
-        {error && (
-            <Alert variant="destructive">
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full p-4">
+            <Alert variant="destructive" className="max-w-md text-center">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
-        )}
-        {isLoading ? (
-          <>
-            <Skeleton className="h-[340px] w-full bg-white/30" />
-            <Skeleton className="h-[280px] w-full bg-white/30" />
-          </>
-        ) : aqiData ? (
-          <>
-            <div className="animate-in fade-in duration-500">
-              <CurrentAqiCard aqiData={aqiData} />
-            </div>
-            <div className="animate-in fade-in duration-700">
-              <HealthAdvisory aqi={currentAqi} />
-            </div>
-          </>
-        ) : null }
-      </div>
+            <Button onClick={getLocation} className="mt-4">
+              <MapPin className="mr-2 h-4 w-4" />
+              Try Again
+            </Button>
+        </div>
+      );
+    }
+    
+    if (aqiData && weatherData) {
+      // In a real app, you would switch views based on the `view` state
+      // For this step, we are only building the main dashboard.
+      switch (view) {
+        case 'dashboard':
+          return <MainDashboard aqiData={aqiData} weatherData={weatherData} />;
+        // case 'map':
+        //   return <AqiMap />;
+        // case 'trends':
+        //   return <HistoricalTrendsChart />;
+        default:
+          return <MainDashboard aqiData={aqiData} weatherData={weatherData} />;
+      }
+    }
+    
+    return null;
+  };
+
+  return (
+    <main className="flex-1 overflow-auto">
+      {renderContent()}
     </main>
   );
 }

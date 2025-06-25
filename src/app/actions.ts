@@ -1,6 +1,7 @@
 
 "use server";
 
+import type { z } from "genkit/zod";
 import { predictAirQuality, type PredictAirQualityInput, type PredictAirQualityOutput } from "@/ai/flows/predict-aqi-flow";
 
 export async function getAqiPrediction(input: PredictAirQualityInput): Promise<PredictAirQualityOutput> {
@@ -16,24 +17,35 @@ export async function getAqiPrediction(input: PredictAirQualityInput): Promise<P
   }
 }
 
-export async function getAqiDataForLocation(lat: number, lon: number) {
-  const token = process.env.AQI_API_TOKEN;
+async function fetchWithToken(url: string, token: string | undefined, tokenName: string) {
   if (!token) {
-    console.error("AQI_API_TOKEN is not set or is invalid.");
-    return { status: 'error', data: 'Server configuration error: Missing or invalid API token.' };
+    const errorMessage = `${tokenName} is not set in the .env file.`;
+    console.error(errorMessage);
+    return { status: 'error', data: errorMessage };
   }
 
   try {
-    const response = await fetch(`https://api.waqi.info/feed/geo:${lat};${lon}/?token=${token}`);
+    const response = await fetch(url);
     if (!response.ok) {
         const errorData = await response.json();
-        console.error(`API Error: ${response.status}`, errorData);
-        return { status: 'error', data: errorData.data || `Failed to fetch data from AQI API. Status: ${response.status}` };
+        console.error(`API Error for ${tokenName}: ${response.status}`, errorData);
+        return { status: 'error', data: errorData.data || `Failed to fetch data from API. Status: ${response.status}` };
     }
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error fetching from WAQI API:", error);
-    return { status: 'error', data: 'An unexpected error occurred while fetching AQI data.' };
+    console.error(`Error fetching from ${tokenName} API:`, error);
+    return { status: 'error', data: 'An unexpected error occurred while fetching data.' };
   }
+}
+
+export async function getAqiDataForLocation(lat: number, lon: number) {
+  const token = process.env.AQI_API_TOKEN;
+  return fetchWithToken(`https://api.waqi.info/feed/geo:${lat};${lon}/?token=${token}`, token, 'AQI_API_TOKEN');
+}
+
+export async function getWeatherDataForLocation(lat: number, lon: number) {
+  const token = process.env.OPENWEATHER_API_KEY;
+  const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${token}&units=metric`;
+  return fetchWithToken(url, token, 'OPENWEATHER_API_KEY');
 }
