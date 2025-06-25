@@ -21,34 +21,28 @@ export default function ForecastPage() {
     setIsLoading(true);
     setError(null);
     
-    Promise.allSettled([
+    Promise.all([
       getAqiDataForLocation(lat, lon),
       getWeatherDataForLocation(lat, lon),
-    ]).then(([aqiResult, weatherResult]) => {
+    ]).then(([aqiResponse, weatherResponse]) => {
       
-      if (aqiResult.status === 'fulfilled' && aqiResult.value.status === "ok") {
-        setAqiData(aqiResult.value.data);
-      } else {
-        const errorMessage = aqiResult.status === 'rejected' 
-          ? (aqiResult.reason as Error).message 
-          : (aqiResult.value as any).message || aqiResult.value.data || 'Could not fetch AQI data.';
-        setError(errorMessage);
+      if (aqiResponse.error) {
+        setError(aqiResponse.error);
         setAqiData(null);
+      } else {
+        setAqiData(aqiResponse.data);
       }
 
-      if (weatherResult.status === 'fulfilled' && String(weatherResult.value.cod).startsWith("2")) {
-        setWeatherData(weatherResult.value);
-      } else {
-         const errorMessage = weatherResult.status === 'rejected' 
-            ? (weatherResult.reason as Error).message 
-            : (weatherResult.value as any).message || 'Could not fetch weather data.';
-        console.error("Weather data fetch failed:", errorMessage);
+      if (weatherResponse.error) {
+        // Use toast for non-critical errors like weather
         toast({
             variant: "destructive",
             title: "Weather Data Error",
-            description: errorMessage,
+            description: weatherResponse.error,
         });
         setWeatherData(null);
+      } else {
+        setWeatherData(weatherResponse.data);
       }
 
     }).catch(e => {

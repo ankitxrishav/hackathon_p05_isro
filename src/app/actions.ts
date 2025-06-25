@@ -1,28 +1,43 @@
 
 "use server";
 
-async function fetchWithToken(url: string, tokenName: string, isJson: boolean = true) {
+async function fetchWithToken(url: string, tokenName: string) {
   const token = process.env[tokenName];
   if (!token) {
     const errorMessage = `${tokenName} is not set in the .env file.`;
     console.error(errorMessage);
-    return { status: 'error', message: errorMessage };
+    return { data: null, error: errorMessage };
   }
 
   const finalUrl = url.replace(`{${tokenName}}`, token);
 
   try {
-    const response = await fetch(finalUrl);
+    const response = await fetch(finalUrl, { next: { revalidate: 3600 } }); // Cache for 1 hour
+    const responseData = await response.json();
+
     if (!response.ok) {
-        const errorData = isJson ? await response.json() : await response.text();
-        console.error(`API Error for ${tokenName}: ${response.status}`, errorData);
-        return { status: 'error', cod: response.status, message: errorData?.data || errorData?.message || `Failed to fetch data from API. Status: ${response.status}` };
+        const message = responseData?.data || responseData?.message || `API Error: ${response.status}`;
+        console.error(`API Error for ${tokenName}: ${response.status}`, message);
+        return { data: null, error: message };
     }
-    const data = await response.json();
-    return data;
+    
+    // Handle API-specific success/error structures
+    if (responseData.status && responseData.status !== 'ok') {
+      return { data: null, error: responseData.data || 'The API returned an error.' };
+    }
+
+    if (responseData.cod && String(responseData.cod) !== '200') {
+      return { data: null, error: responseData.message || 'The weather API returned an error code.' };
+    }
+    
+    // The WAQI API wraps its primary result in a `data` property.
+    // Other APIs (like OpenWeather) do not. This handles both cases.
+    const data = responseData.data || responseData;
+
+    return { data, error: null };
   } catch (error) {
     console.error(`Error fetching from ${tokenName} API:`, error);
-    return { status: 'error', cod: '500', message: 'An unexpected error occurred while fetching data.' };
+    return { data: null, error: 'An unexpected error occurred while fetching data.' };
   }
 }
 

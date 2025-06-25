@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -17,12 +18,12 @@ export default function TrendsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await getAqiDataForLocation(lat, lon);
-      if (result.status === "ok") {
-        setAqiData(result.data);
-      } else {
-        setError((result as any).message || result.data || "Could not fetch AQI data.");
+      const { data, error } = await getAqiDataForLocation(lat, lon);
+      if (error) {
+        setError(error);
         setAqiData(null);
+      } else {
+        setAqiData(data);
       }
     } catch (e: any) {
       console.error(e);
