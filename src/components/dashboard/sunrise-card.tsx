@@ -5,6 +5,19 @@ import { Sunrise, Sunset } from "lucide-react";
 import { format } from 'date-fns';
 
 export default function SunriseCard({ weatherData }: { weatherData: any }) {
+    if (!weatherData) {
+        return (
+            <Card className="bg-card/70 backdrop-blur-sm">
+                <CardHeader>
+                    <CardTitle className="text-base font-medium text-muted-foreground">Sunrise & Sunset</CardTitle>
+                </CardHeader>
+                <CardContent className="flex justify-center items-center h-[124px]">
+                    <p className="text-sm text-muted-foreground">Data unavailable</p>
+                </CardContent>
+            </Card>
+        );
+    }
+
     const sunriseTime = weatherData.city.sunrise ? format(new Date(weatherData.city.sunrise * 1000), 'p') : 'N/A';
     const sunsetTime = weatherData.city.sunset ? format(new Date(weatherData.city.sunset * 1000), 'p') : 'N/A';
     

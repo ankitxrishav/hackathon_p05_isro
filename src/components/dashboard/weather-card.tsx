@@ -2,15 +2,30 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Thermometer, Cloud } from "lucide-react";
+import { MapPin, Thermometer, Cloud, AlertCircle } from "lucide-react";
 import { format } from 'date-fns';
 import Image from 'next/image';
 import { Button } from "../ui/button";
 
 export default function WeatherCard({ weatherData, aqiData }: { weatherData: any, aqiData: any }) {
+
+    if (!weatherData) {
+        return (
+            <Card className="bg-destructive/20 backdrop-blur-sm w-full border-destructive">
+                <CardContent className="p-6 flex flex-col justify-center items-center h-full text-center">
+                    <AlertCircle className="w-10 h-10 text-destructive mb-2" />
+                    <h3 className="text-lg font-semibold text-destructive-foreground">Weather Data Unavailable</h3>
+                    <p className="text-sm text-destructive-foreground/80">
+                        Could not fetch weather data. Please ensure your OpenWeatherMap API key is valid and configured in the .env file.
+                    </p>
+                </CardContent>
+            </Card>
+        );
+    }
+    
     const currentWeatherData = weatherData.list[0];
-    const cityName = weatherData.city.name;
-    const country = weatherData.city.country;
+    const cityName = aqiData.city.name;
+    const country = aqiData.city.country;
 
     return (
         <Card className="bg-card/70 backdrop-blur-sm w-full">

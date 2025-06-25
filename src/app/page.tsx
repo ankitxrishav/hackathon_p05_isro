@@ -18,21 +18,32 @@ export default function Home() {
   const handleFetchData = useCallback((lat: number, lon: number) => {
     setIsLoading(true);
     setError(null);
-    Promise.all([
+    
+    Promise.allSettled([
       getAqiDataForLocation(lat, lon),
       getWeatherDataForLocation(lat, lon),
     ]).then(([aqiResult, weatherResult]) => {
-      if (aqiResult && aqiResult.status === "ok") {
-        setAqiData(aqiResult.data);
+      
+      if (aqiResult.status === 'fulfilled' && aqiResult.value.status === "ok") {
+        setAqiData(aqiResult.value.data);
       } else {
-        setError(aqiResult.data || 'Could not fetch AQI data.');
+        const errorMessage = aqiResult.status === 'rejected' 
+          ? (aqiResult.reason as Error).message 
+          : aqiResult.value.data || 'Could not fetch AQI data.';
+        setError(errorMessage);
+        setAqiData(null);
       }
 
-      if (weatherResult && weatherResult.cod === "200") { // OpenWeather uses 'cod' for status
-        setWeatherData(weatherResult);
+      if (weatherResult.status === 'fulfilled' && weatherResult.value.cod === "200") {
+        setWeatherData(weatherResult.value);
       } else {
-        setError(weatherResult.message || 'Could not fetch weather data.');
+         const errorMessage = weatherResult.status === 'rejected' 
+            ? (weatherResult.reason as Error).message 
+            : weatherResult.value.message || 'Could not fetch weather data.';
+        console.error("Weather data fetch failed:", errorMessage);
+        setWeatherData(null);
       }
+
     }).catch(e => {
       console.error(e);
       setError("An unexpected error occurred while fetching data.");
@@ -98,7 +109,7 @@ export default function Home() {
             </Button>
         </div>
       )}
-      {!isLoading && !error && aqiData && weatherData && (
+      {!isLoading && !error && aqiData && (
         <MainDashboard aqiData={aqiData} weatherData={weatherData} />
       )}
     </main>

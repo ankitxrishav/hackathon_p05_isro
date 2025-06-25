@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,9 +26,9 @@ export default function TodayHighlights({ aqiData, weatherData }: { aqiData: any
     const aqi = aqiData.aqi;
     const aqiInfo = getAqiInfo(aqi);
 
-    const windSpeed = weatherData.list[0].wind.speed; // m/s
-    const humidity = weatherData.list[0].main.humidity;
-    const feelsLike = Math.round(weatherData.list[0].main.feels_like);
+    const windSpeed = weatherData?.list?.[0]?.wind?.speed;
+    const humidity = weatherData?.list?.[0]?.main?.humidity;
+    const feelsLike = weatherData ? Math.round(weatherData.list[0].main.feels_like) : null;
     
     // UV Index not available in this API endpoint, using AQI as a proxy for example
     const uvIndex = aqi > 150 ? "High" : aqi > 100 ? "Moderate" : "Low";
@@ -52,20 +53,20 @@ export default function TodayHighlights({ aqiData, weatherData }: { aqiData: any
                 <HighlightItem
                     icon={<Wind className="w-8 h-8 text-primary" />}
                     title="Wind Status"
-                    value={windSpeed.toFixed(1)}
-                    unit="m/s"
+                    value={windSpeed ? windSpeed.toFixed(1) : 'N/A'}
+                    unit={windSpeed ? "m/s" : ""}
                 />
                 <HighlightItem
                     icon={<Droplets className="w-8 h-8 text-primary" />}
                     title="Humidity"
-                    value={humidity}
-                    unit="%"
+                    value={humidity ?? 'N/A'}
+                    unit={humidity ? "%" : ""}
                 />
                 <HighlightItem
                     icon={<Thermometer className="w-8 h-8 text-primary" />}
                     title="Feels Like"
-                    value={feelsLike}
-                    unit="°C"
+                    value={feelsLike ?? 'N/A'}
+                    unit={feelsLike !== null ? "°C" : ""}
                 />
             </CardContent>
         </Card>
