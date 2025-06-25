@@ -87,8 +87,15 @@ export default function PredictiveForecastChart({ aqiData, weatherData }: { aqiD
                     }}
                     labelStyle={{ fontWeight: 'bold' }}
                     formatter={(value: number, name: string) => {
-                        const unit = name === 'temp' ? '°C' : name === 'humidity' ? '%' : ' AQI';
-                        return [`${value}${unit}`, name.charAt(0).toUpperCase() + name.slice(1)];
+                        let unit = '';
+                        if (name === 'Temperature') {
+                          unit = '°C';
+                        } else if (name === 'Humidity') {
+                          unit = '%';
+                        } else if (name === 'AQI (PM2.5)') {
+                          unit = ' AQI';
+                        }
+                        return [`${value}${unit}`, name];
                     }}
                 />
                 <Legend iconType="circle" iconSize={10} />
