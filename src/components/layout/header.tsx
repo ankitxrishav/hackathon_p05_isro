@@ -1,18 +1,9 @@
 
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Search, Wind } from "lucide-react";
+import Link from "next/link";
 
 export function Header() {
   return (
@@ -22,24 +13,10 @@ export function Header() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input type="search" placeholder="Search City..." className="w-full rounded-lg bg-card pl-8" />
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar>
-                <AvatarImage src="https://placehold.co/100x100.png" alt="User" />
-                <AvatarFallback>U</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Support</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>Logout</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Link href="/" className="flex items-center gap-2 text-foreground no-underline">
+            <Wind className="h-6 w-6 text-primary" />
+            <span className="font-bold text-lg">BreatheEasy</span>
+        </Link>
       </div>
     </header>
   );

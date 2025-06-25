@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
-import { Wind, LayoutDashboard, Map, BarChart3, BrainCircuit, Settings, LogOut } from 'lucide-react';
+import { Wind, LayoutDashboard, Map, BarChart3, BrainCircuit, LogOut } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
@@ -15,7 +15,6 @@ const navLinks = [
 ];
 
 const bottomLinks = [
-    { href: '#settings', label: 'Settings', icon: Settings },
     { href: '#logout', label: 'Logout', icon: LogOut },
 ]
 

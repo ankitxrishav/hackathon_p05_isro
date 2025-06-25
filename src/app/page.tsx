@@ -55,9 +55,11 @@ export default function Home() {
         handleFetchData(position.coords.latitude, position.coords.longitude);
       },
       (geoError) => {
-        let errorMessage = "Unable to retrieve your location. Please grant permission and try again.";
+        let errorMessage;
         if (geoError.code === geoError.PERMISSION_DENIED) {
-            errorMessage = "Location access was denied. To use this feature, please enable location permissions for this site in your browser settings and then try again."
+            errorMessage = "Location access denied. To use this app, please enable location permissions for this site in your browser's settings and then click 'Try Again'."
+        } else {
+            errorMessage = "Unable to retrieve your location. Please ensure location services are enabled on your device and try again.";
         }
         setError(errorMessage);
         setIsLoading(false);

@@ -26,7 +26,7 @@ export default function MainDashboard({ aqiData, weatherData }: { aqiData: any, 
             <HistoricalTrendsChart />
           </div>
           <div id="forecast">
-            <AqiForecast />
+            <AqiForecast aqiData={aqiData} weatherData={weatherData} />
           </div>
         </div>
         {/* Right Sidebar Column */}

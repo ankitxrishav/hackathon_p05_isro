@@ -1,49 +1,58 @@
+
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { BrainCircuit, Loader2, Sparkles } from "lucide-react";
+import { BrainCircuit, Loader2, AlertTriangle } from "lucide-react";
 import { getAqiPrediction } from "@/app/actions";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { getAqiInfo } from "@/lib/aqi";
 
-const formSchema = z.object({
-  location: z.string().min(1, { message: "Location is required." }),
-  historicalAqiData: z.string().min(1, { message: "Historical AQI data is required." }),
-  weatherData: z.string().min(1, { message: "Weather data is required." }),
-});
-
-export default function AqiForecast() {
+export default function AqiForecast({ aqiData, weatherData }: { aqiData: any, weatherData: any }) {
   const [prediction, setPrediction] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      location: "New Delhi",
-      historicalAqiData: "Last 7 days AQI ranged from 120 to 180, with high PM2.5 levels in the evenings.",
-      weatherData: "Current temperature is 25°C, humidity at 60%, wind speed 5 km/h from the northwest. No rain expected.",
-    },
-  });
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    setPrediction("");
-    try {
-      const result = await getAqiPrediction(values);
-      setPrediction(result.forecast);
-    } catch (error) {
-      setPrediction("Failed to get prediction. Please try again.");
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (!aqiData || !weatherData) {
+      return;
     }
-  }
 
+    const generatePrediction = async () => {
+      setIsLoading(true);
+      setError(null);
+      setPrediction("");
+
+      try {
+        const location = aqiData.city.name;
+        
+        // Create descriptive strings from the available data for the AI model
+        const historicalAqiData = `The current AQI is ${aqiData.aqi} which is considered ${getAqiInfo(aqiData.aqi).category}. The dominant pollutant is ${aqiData.dominentpol}. The API's forecast for the next few days suggests average PM2.5 levels will be around ${aqiData.forecast.daily.pm25.map((d: any) => d.avg).join(', ')}.`;
+        const weatherDataString = `Current temperature is ${weatherData.list[0].main.temp}°C with ${weatherData.list[0].weather[0].description}. Humidity is at ${weatherData.list[0].main.humidity}%, and wind speed is ${weatherData.list[0].wind.speed} m/s.`;
+
+        const input = {
+          location,
+          historicalAqiData,
+          weatherData: weatherDataString,
+        };
+        
+        const result = await getAqiPrediction(input);
+        if(result.forecast){
+            setPrediction(result.forecast);
+        } else {
+            setError("The AI model could not generate a forecast with the provided data.");
+        }
+      } catch (e) {
+        console.error("Prediction error:", e);
+        setError("Failed to get prediction due to an unexpected error.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    generatePrediction();
+  }, [aqiData, weatherData]);
+  
   return (
     <Card>
       <CardHeader>
@@ -52,70 +61,26 @@ export default function AqiForecast() {
             <CardTitle>Predictive Forecast</CardTitle>
         </div>
         <CardDescription>
-          AI-powered 24-72 hour air quality forecast.
+          AI-powered 24-72 hour air quality forecast for {aqiData?.city?.name || 'your location'}.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., New Delhi" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="historicalAqiData"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Historical AQI Data</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Describe past AQI trends..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="weatherData"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Current Weather Data</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Describe current weather conditions..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={isLoading} className="w-full">
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Predicting...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Generate Forecast
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
-        {prediction && (
+        {isLoading && (
+          <div className="flex items-center justify-center h-24">
+            <Loader2 className="mr-2 h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Generating AI forecast...</p>
+          </div>
+        )}
+        {error && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        {prediction && !isLoading && !error && (
           <div className="mt-4 rounded-lg border bg-secondary/50 p-4 text-sm">
             <h4 className="font-semibold mb-2">AI Forecast:</h4>
-            <p className="text-secondary-foreground">{prediction}</p>
+            <p className="text-secondary-foreground whitespace-pre-wrap">{prediction}</p>
           </div>
         )}
       </CardContent>
