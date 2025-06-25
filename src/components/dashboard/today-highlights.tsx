@@ -1,9 +1,8 @@
-
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAqiInfo } from "@/lib/aqi";
-import { Gauge, Wind, Droplets, Sun,thermometer } from "lucide-react";
+import { Gauge, Wind, Droplets, Sun, Thermometer } from "lucide-react";
 
 const HighlightItem = ({ icon, title, value, unit, description }: { icon: React.ReactNode, title: string, value: string | number, unit?: string, description?: string }) => (
     <Card className="bg-card/50 border-0 shadow-none">
@@ -63,7 +62,7 @@ export default function TodayHighlights({ aqiData, weatherData }: { aqiData: any
                     unit="%"
                 />
                 <HighlightItem
-                    icon={<thermometer className="w-8 h-8 text-primary" />}
+                    icon={<Thermometer className="w-8 h-8 text-primary" />}
                     title="Feels Like"
                     value={feelsLike}
                     unit="°C"
