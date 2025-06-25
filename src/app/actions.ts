@@ -18,7 +18,7 @@ export async function getAqiPrediction(input: PredictAirQualityInput): Promise<P
 
 export async function getAqiDataForLocation(lat: number, lon: number) {
   const token = process.env.AQI_API_TOKEN;
-  if (!token || token === "your_token_here" || token.length < 10) {
+  if (!token) {
     console.error("AQI_API_TOKEN is not set or is invalid.");
     return { status: 'error', data: 'Server configuration error: Missing or invalid API token.' };
   }
