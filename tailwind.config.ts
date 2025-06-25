@@ -8,10 +8,17 @@ export default {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        body: ['PT Sans', 'sans-serif'],
+        headline: ['PT Sans', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -65,6 +72,12 @@ export default {
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))',
         },
+        'aqi-good': '#22c55e', // green-500
+        'aqi-moderate': '#facc15', // yellow-400
+        'aqi-unhealthy-sensitive': '#f97316', // orange-500
+        'aqi-unhealthy': '#ef4444', // red-500
+        'aqi-very-unhealthy': '#a855f7', // purple-500
+        'aqi-hazardous': '#b91c1c', // red-700
       },
       borderRadius: {
         lg: 'var(--radius)',
