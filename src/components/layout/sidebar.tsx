@@ -3,13 +3,13 @@
 
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
-import { Wind, LayoutDashboard, Grid3x3, BarChart3, BrainCircuit, LogOut, Rocket } from 'lucide-react';
+import { Wind, LayoutDashboard, Map, BarChart3, BrainCircuit, LogOut, Rocket } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 const navLinks = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/map', label: 'Heatmap', icon: Grid3x3 },
+  { href: '/map', label: 'Heatmap', icon: Map },
   { href: '/trends', label: 'Trends', icon: BarChart3 },
   { href: '/forecast', label: 'Forecast', icon: BrainCircuit },
   { href: '/analytics', label: 'Analytics', icon: Rocket },
