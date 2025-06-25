@@ -7,13 +7,7 @@ import SunriseCard from "./sunrise-card";
 import OtherCitiesCard from "./other-cities-card";
 import TodayHighlights from "./today-highlights";
 import { Header } from "../layout/header";
-import dynamic from "next/dynamic";
-import { Skeleton } from "../ui/skeleton";
-
-const AqiMap = dynamic(() => import("./aqi-map"), {
-  ssr: false,
-  loading: () => <Skeleton className="h-[580px] w-full" />,
-});
+import { MapPreviewCard } from "./map-preview-card";
 
 export default function MainDashboard({ aqiData, weatherData }: { aqiData: any, weatherData: any }) {
   return (
@@ -24,7 +18,7 @@ export default function MainDashboard({ aqiData, weatherData }: { aqiData: any, 
         <div className="lg:col-span-2 xl:col-span-3 space-y-6">
           <WeatherCard weatherData={weatherData} aqiData={aqiData} />
           <HourlyForecast weatherData={weatherData} />
-          <AqiMap />
+          <MapPreviewCard />
           <HistoricalTrendsChart aqiData={aqiData} />
         </div>
         {/* Right Sidebar Column */}
