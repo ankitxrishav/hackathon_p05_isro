@@ -5,6 +5,9 @@ import { useEffect } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet.heat';
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 interface Station {
   lat: number;
@@ -29,22 +32,21 @@ const HeatmapLayer = ({ stations }: HeatmapLayerProps) => {
       .filter(station => station.lat && station.lon && station.aqi && !isNaN(Number(station.aqi)) && Number(station.aqi) > 0)
       .map(station => [station.lat, station.lon, Number(station.aqi) / 300]); // Normalize AQI: 300 is a reasonable upper bound for intensity
 
-    if ((L as any).heatLayer) {
-      const heatLayer = (L as any).heatLayer(points, { 
+    const heatLayer = (L as any).heatLayer(points, { 
         radius: 25, 
         blur: 15,
         maxZoom: 12,
         max: 1.0, // Corresponds to the normalized AQI
         gradient: {0.1: 'blue', 0.3: 'lime', 0.5: 'yellow', 0.7: 'orange', 1.0: 'red'}
-      });
+    });
 
-      map.addLayer(heatLayer);
+    map.addLayer(heatLayer);
 
-      // Cleanup function to remove the layer when the component unmounts or stations change
-      return () => {
-        map.removeLayer(heatLayer);
-      };
-    }
+    // Cleanup function to remove the layer when the component unmounts or stations change
+    return () => {
+      map.removeLayer(heatLayer);
+    };
+    
 
   }, [map, stations]);
 
@@ -54,16 +56,37 @@ const HeatmapLayer = ({ stations }: HeatmapLayerProps) => {
 
 interface AqiHeatmapProps {
   stations: Station[];
+  isLoading: boolean;
+  error: string | null;
 }
 
-const AqiHeatmap = ({ stations }: AqiHeatmapProps) => {
+const AqiHeatmap = ({ stations, isLoading, error }: AqiHeatmapProps) => {
   return (
     <MapContainer center={[22.5, 83.0]} zoom={5} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
       />
-      <HeatmapLayer stations={stations} />
+      
+      {isLoading && (
+        <div className="absolute inset-0 z-[1000] bg-muted/50 flex items-center justify-center pointer-events-none">
+          <Skeleton className="h-full w-full" />
+        </div>
+      )}
+
+      {error && !isLoading && (
+        <div className="absolute inset-0 z-[1000] bg-muted/50 flex items-center justify-center p-4">
+            <Alert variant="destructive" className="max-w-md text-center">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Data Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+            </Alert>
+        </div>
+      )}
+
+      {!isLoading && !error && stations && stations.length > 0 && (
+        <HeatmapLayer stations={stations} />
+      )}
     </MapContainer>
   );
 };

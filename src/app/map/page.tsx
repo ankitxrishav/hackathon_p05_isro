@@ -4,11 +4,8 @@
 import { useState, useEffect } from "react";
 import { getAqiStationsInBounds } from "@/app/actions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
 import dynamic from 'next/dynamic';
 
-// Dynamically import the map component to ensure it's client-side only and won't cause SSR issues.
 const AqiHeatmap = dynamic(() => import('@/components/dashboard/aqi-heatmap'), {
   ssr: false,
   loading: () => <Skeleton className="h-full w-full" />,
@@ -47,20 +44,8 @@ export default function MapPage() {
                         Real-time air quality visualization across monitoring stations.
                     </p>
                 </div>
-                <div className="h-[600px] w-full rounded-lg overflow-hidden border bg-muted">
-                    {isLoading && <Skeleton className="h-full w-full" />}
-                    {error && !isLoading && (
-                        <div className="flex items-center justify-center h-full p-4">
-                            <Alert variant="destructive" className="max-w-md text-center">
-                                <AlertTriangle className="h-4 w-4" />
-                                <AlertTitle>Data Error</AlertTitle>
-                                <AlertDescription>{error}</AlertDescription>
-                            </Alert>
-                        </div>
-                    )}
-                    {!isLoading && !error && stations && (
-                        <AqiHeatmap stations={stations} />
-                    )}
+                <div className="h-[600px] w-full rounded-lg overflow-hidden border bg-muted relative">
+                    <AqiHeatmap stations={stations} isLoading={isLoading} error={error} />
                 </div>
             </div>
         </div>
