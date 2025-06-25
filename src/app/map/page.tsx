@@ -5,11 +5,12 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAqiStationsInBounds } from "@/app/actions";
-import { AlertTriangle, Map as MapIcon } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 const AqiHeatmap = dynamic(() => import("@/components/dashboard/aqi-heatmap"), {
   ssr: false,
-  loading: () => <Skeleton className="h-[calc(100vh-150px)] w-full" />,
+  loading: () => <Skeleton className="h-[calc(100vh-200px)] w-full" />,
 });
 
 interface StationData {
@@ -27,7 +28,7 @@ const INDIA_BOUNDS = {
 };
 
 export default function MapPage() {
-  const [stations, setStations] = useState<StationData[]>([]);
+  const [stations, setStations] = useState<StationData[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,15 +87,19 @@ export default function MapPage() {
             </p>
           </div>
           <div className="h-[calc(100vh-200px)] w-full rounded-lg border shadow-sm overflow-hidden">
-            {error && !isLoading ? (
-              <div className="bg-background/80 flex flex-col items-center justify-center h-full p-4 text-center z-10">
-                <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
-                <p className="text-destructive text-sm font-semibold">
-                  Could not load map data
-                </p>
-                <p className="text-muted-foreground text-xs">{error}</p>
+            {isLoading && (
+              <Skeleton className="h-full w-full" />
+            )}
+            {error && !isLoading && (
+              <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+                <Alert variant="destructive" className="max-w-md">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Error Loading Map</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
               </div>
-            ) : (
+            )}
+            {!isLoading && !error && stations && (
               <AqiHeatmap stations={stations} />
             )}
           </div>

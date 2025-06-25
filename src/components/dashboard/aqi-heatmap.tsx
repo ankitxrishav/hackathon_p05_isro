@@ -1,10 +1,10 @@
 
 "use client";
 
-import { useEffect } from "react";
 import L from "leaflet";
 import "leaflet.heat";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { useEffect } from "react";
 
 interface StationData {
   uid: number;
@@ -21,8 +21,8 @@ const HeatmapLayer = ({ points }: HeatmapLayerProps) => {
   const map = useMap();
 
   useEffect(() => {
-    if (!map || points.length === 0) return;
-    
+    if (!map || typeof window === 'undefined') return;
+
     const heatLayer = (L as any).heatLayer(points, {
         radius: 25,
         max: 200, // Cap intensity for better visualization
@@ -42,6 +42,7 @@ const HeatmapLayer = ({ points }: HeatmapLayerProps) => {
 
   return null;
 };
+
 
 export default function AqiHeatmap({ stations }: { stations: StationData[] }) {
   const points: [number, number, number][] = stations.map((station) => [
