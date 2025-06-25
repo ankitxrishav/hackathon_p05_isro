@@ -49,3 +49,9 @@ export async function getWeatherDataForLocation(lat: number, lon: number) {
   const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${token}&units=metric`;
   return fetchWithToken(url, token, 'OPENWEATHER_API_KEY');
 }
+
+export async function getAqiStationsInBounds(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const token = process.env.AQI_API_TOKEN;
+  const url = `https://api.waqi.info/map/bounds/?latlng=${lat1},${lon1},${lat2},${lon2}&token=${token}`;
+  return fetchWithToken(url, token, 'AQI_API_TOKEN');
+}

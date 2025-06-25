@@ -1,16 +1,20 @@
+
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
-import { Map } from "lucide-react";
+import { Map, Loader2, AlertTriangle } from "lucide-react";
 import { getAqiInfo } from "@/lib/aqi";
+import { useEffect, useState } from "react";
+import { getAqiStationsInBounds } from "@/app/actions";
 
-interface AqiMarkerProps {
+interface StationData {
+  uid: number;
   aqi: number;
   city: string;
   position: { top: string; left: string };
 }
 
-const AqiMarker = ({ aqi, city, position }: AqiMarkerProps) => {
+const AqiMarker = ({ aqi, city, position }: { aqi: number, city: string, position: {top: string, left: string}}) => {
   const { colorClass } = getAqiInfo(aqi);
 
   return (
@@ -35,16 +39,74 @@ const AqiMarker = ({ aqi, city, position }: AqiMarkerProps) => {
   );
 };
 
-const mockLocations: AqiMarkerProps[] = [
-  { city: "Mumbai", aqi: 178, position: { top: "65%", left: "30%" } },
-  { city: "Delhi", aqi: 250, position: { top: "40%", left: "45%" } },
-  { city: "Bangalore", aqi: 85, position: { top: "80%", left: "48%" } },
-  { city: "Kolkata", aqi: 195, position: { top: "55%", left: "80%" } },
-  { city: "Chennai", aqi: 92, position: { top: "82%", left: "60%" } },
-  { city: "Jaipur", aqi: 160, position: { top: "45%", left: "38%" } },
-];
+// Bounding box for India for coordinate conversion
+const INDIA_BOUNDS = {
+  minLat: 8,
+  maxLat: 37,
+  minLon: 68,
+  maxLon: 98,
+};
+
+function convertGeoToPercent(lat: number, lon: number) {
+  const { minLat, maxLat, minLon, maxLon } = INDIA_BOUNDS;
+  const left = ((lon - minLon) / (maxLon - minLon)) * 100;
+  const top = ((maxLat - lat) / (maxLat - minLat)) * 100;
+
+  // Clamp values to be within the map boundaries
+  return {
+    left: `${Math.max(0, Math.min(100, left))}%`,
+    top: `${Math.max(0, Math.min(100, top))}%`,
+  };
+}
 
 export default function AqiMap() {
+    const [stations, setStations] = useState<StationData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchMapData = async () => {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const result = await getAqiStationsInBounds(
+                    INDIA_BOUNDS.minLat,
+                    INDIA_BOUNDS.minLon,
+                    INDIA_BOUNDS.maxLat,
+                    INDIA_BOUNDS.maxLon
+                );
+
+                if (result.status === 'ok') {
+                    const validStations: StationData[] = result.data
+                        .map((station: any) => ({
+                            uid: station.uid,
+                            city: station.station.name,
+                            aqi: parseInt(station.aqi, 10),
+                            lat: station.lat,
+                            lon: station.lon,
+                        }))
+                        .filter((station: any) => !isNaN(station.aqi) && station.aqi >= 0)
+                        .map((station: any) => ({
+                            uid: station.uid,
+                            city: station.city,
+                            aqi: station.aqi,
+                            position: convertGeoToPercent(station.lat, station.lon)
+                        }));
+                    setStations(validStations);
+                } else {
+                    setError(result.message || 'Failed to fetch AQI map data.');
+                }
+            } catch (e) {
+                setError('An unexpected error occurred while fetching map data.');
+                console.error(e);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchMapData();
+    }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -64,11 +126,22 @@ export default function AqiMap() {
             layout="fill"
             objectFit="cover"
             className="opacity-50"
-            data-ai-hint="map city"
+            data-ai-hint="map india"
           />
           <div className="absolute inset-0">
-            {mockLocations.map((loc) => (
-              <AqiMarker key={loc.city} {...loc} />
+             {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-card/50">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            )}
+            {error && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/50 p-4">
+                <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+                <p className="text-destructive text-center">{error}</p>
+              </div>
+            )}
+            {!isLoading && !error && stations.map((loc) => (
+              <AqiMarker key={loc.uid} aqi={loc.aqi} city={loc.city} position={loc.position} />
             ))}
           </div>
         </div>
