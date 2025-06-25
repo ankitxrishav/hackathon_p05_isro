@@ -6,12 +6,10 @@ import HourlyForecast from "./hourly-forecast";
 import SunriseCard from "./sunrise-card";
 import OtherCitiesCard from "./other-cities-card";
 import TodayHighlights from "./today-highlights";
-import { Header } from "../layout/header";
 
 export default function MainDashboard({ aqiData, weatherData }: { aqiData: any, weatherData: any }) {
   return (
     <div className="flex flex-col h-full">
-      <Header />
       <div className="flex-1 p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto">
         {/* Left/Main Column */}
         <div className="lg:col-span-2 xl:col-span-3 space-y-6">

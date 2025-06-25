@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Footer } from '@/components/layout/footer';
 import { PT_Sans } from 'next/font/google';
 import { LocationProvider } from '@/context/LocationContext';
+import { Header } from '@/components/layout/header';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -33,6 +34,7 @@ export default function RootLayout({
           <div className="flex min-h-screen w-full">
             <Sidebar />
             <div className="flex flex-col flex-1">
+              <Header />
               <main className="flex-1">{children}</main>
               <Footer />
             </div>
