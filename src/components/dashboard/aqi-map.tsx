@@ -25,6 +25,40 @@ const INDIA_BOUNDS = {
     maxLon: 98,
 };
 
+const createAqiIcon = (aqi: number) => {
+    const { hexColor } = getAqiInfo(aqi);
+    const displayAqi = aqi > 999 ? '999+' : aqi;
+
+    return L.divIcon({
+        html: `<div style="background-color: ${hexColor};" class="h-7 w-7 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white font-bold text-xs">${displayAqi}</div>`,
+        className: 'bg-transparent border-0',
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+        popupAnchor: [0, -15]
+    });
+};
+
+const DynamicMarkers = ({ stations }: { stations: StationData[] }) => {
+  return (
+    <>
+      {stations.map((station) => (
+        <Marker
+          key={station.uid}
+          position={[station.lat, station.lon]}
+          icon={createAqiIcon(station.aqi)}
+        >
+          <Popup>
+            <b>{station.city}</b>
+            <br />
+            AQI: {station.aqi}
+          </Popup>
+        </Marker>
+      ))}
+    </>
+  );
+};
+
+
 export default function AqiMap() {
     const [stations, setStations] = useState<StationData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -66,19 +100,6 @@ export default function AqiMap() {
         fetchMapData();
     }, []);
 
-  const createAqiIcon = (aqi: number) => {
-      const { hexColor } = getAqiInfo(aqi);
-      const displayAqi = aqi > 999 ? '999+' : aqi;
-
-      return L.divIcon({
-          html: `<div style="background-color: ${hexColor};" class="h-7 w-7 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white font-bold text-xs">${displayAqi}</div>`,
-          className: 'bg-transparent border-0',
-          iconSize: [30, 30],
-          iconAnchor: [15, 30],
-          popupAnchor: [0, -15]
-      });
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -91,40 +112,31 @@ export default function AqiMap() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[450px] w-full rounded-lg overflow-hidden border bg-muted">
-          {isLoading ? (
-            <Skeleton className="h-full w-full" />
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-              <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
-              <p className="text-destructive text-sm">{error}</p>
-            </div>
-          ) : (
-              <MapContainer 
+        <div className="h-[450px] w-full rounded-lg overflow-hidden border bg-muted relative">
+            <MapContainer 
                 center={[22.5, 83.0]} 
                 zoom={5} 
                 scrollWheelZoom={true} 
-                className="h-full w-full"
+                className="h-full w-full z-0"
               >
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {stations.map((station) => (
-                  <Marker
-                    key={station.uid}
-                    position={[station.lat, station.lon]}
-                    icon={createAqiIcon(station.aqi)}
-                  >
-                    <Popup>
-                      <b>{station.city}</b>
-                      <br />
-                      AQI: {station.aqi}
-                    </Popup>
-                  </Marker>
-                ))}
-              </MapContainer>
-          )}
+                <DynamicMarkers stations={stations} />
+            </MapContainer>
+
+            {isLoading && (
+                <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
+                    <Skeleton className="h-full w-full" />
+                </div>
+            )}
+            {error && (
+                <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center p-4 text-center z-10">
+                  <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+                  <p className="text-destructive text-sm">{error}</p>
+                </div>
+            )}
         </div>
       </CardContent>
     </Card>
