@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/header";
 import AqiMap from "@/components/dashboard/aqi-map";
 import CurrentAqiCard from "@/components/dashboard/current-aqi-card";
@@ -5,9 +8,50 @@ import HealthAdvisory from "@/components/dashboard/health-advisory";
 import HistoricalTrendsChart from "@/components/dashboard/historical-trends-chart";
 import AqiForecast from "@/components/dashboard/aqi-forecast";
 import AdvancedAnalytics from "@/components/dashboard/advanced-analytics";
+import { getAqiDataForLocation } from "./actions";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 export default function Home() {
-  const currentAqi = 155; // Example AQI value
+  const [aqiData, setAqiData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!("geolocation" in navigator)) {
+      setError("Geolocation is not supported by your browser.");
+      setIsLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const data = await getAqiDataForLocation(
+            position.coords.latitude,
+            position.coords.longitude
+          );
+          if (data && data.status === "ok") {
+            setAqiData(data.data);
+          } else {
+            const errorMessage = typeof data.data === 'string' ? data.data : 'Could not fetch AQI data.';
+            setError(`${errorMessage} Ensure your AQI_API_TOKEN is set in the .env file.`);
+          }
+        } catch (e) {
+          setError("Failed to fetch AQI data.");
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      (geoError) => {
+        setError("Unable to retrieve your location. Please grant permission and refresh.");
+        setIsLoading(false);
+      }
+    );
+  }, []);
+
+  const currentAqi = aqiData?.aqi;
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -22,15 +66,32 @@ export default function Home() {
           </div>
         </div>
         <div className="lg:col-span-1 xl:col-span-1 space-y-6">
-          <div className="animate-in fade-in duration-500">
-            <CurrentAqiCard aqi={currentAqi} />
-          </div>
-          <div className="animate-in fade-in duration-700">
-            <HealthAdvisory aqi={currentAqi} />
-          </div>
-          <div className="animate-in fade-in duration-900">
-            <AqiForecast />
-          </div>
+          {error && (
+             <Alert variant="destructive">
+               <AlertTriangle className="h-4 w-4" />
+               <AlertTitle>Error</AlertTitle>
+               <AlertDescription>{error}</AlertDescription>
+             </Alert>
+          )}
+          {isLoading ? (
+            <>
+              <Skeleton className="h-[340px] w-full" />
+              <Skeleton className="h-[280px] w-full" />
+              <Skeleton className="h-[450px] w-full" />
+            </>
+          ) : aqiData ? (
+            <>
+              <div className="animate-in fade-in duration-500">
+                <CurrentAqiCard aqiData={aqiData} />
+              </div>
+              <div className="animate-in fade-in duration-700">
+                <HealthAdvisory aqi={currentAqi} />
+              </div>
+              <div className="animate-in fade-in duration-900">
+                <AqiForecast />
+              </div>
+            </>
+          ) : null }
           <div className="animate-in fade-in duration-1000">
             <AdvancedAnalytics />
           </div>
