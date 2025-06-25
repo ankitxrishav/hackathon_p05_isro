@@ -17,8 +17,16 @@ const PredictAirQualityInputSchema = z.object({
 });
 export type PredictAirQualityInput = z.infer<typeof PredictAirQualityInputSchema>;
 
+const ForecastBreakdownSchema = z.object({
+    day: z.string().describe("The day of the week for the forecast (e.g., 'Tomorrow', 'Friday')."),
+    aqi: z.string().describe("The predicted AQI range for the day (e.g., '110-130')."),
+    summary: z.string().describe("A brief summary for that day's air quality."),
+});
+
 const PredictAirQualityOutputSchema = z.object({
-  forecast: z.string().describe('A 24-72 hour air quality forecast for the location.'),
+  overallSummary: z.string().describe("A 2-3 sentence high-level summary of the air quality forecast for the next 72 hours."),
+  healthRecommendations: z.string().describe("Actionable health recommendations based on the forecast. Use bullet points."),
+  dailyForecasts: z.array(ForecastBreakdownSchema).describe("An array of forecasts for the next 3 days."),
 });
 export type PredictAirQualityOutput = z.infer<typeof PredictAirQualityOutputSchema>;
 
@@ -30,15 +38,24 @@ const prompt = ai.definePrompt({
   name: 'predictAirQualityPrompt',
   input: {schema: PredictAirQualityInputSchema},
   output: {schema: PredictAirQualityOutputSchema},
-  prompt: `You are an expert in air quality prediction.
+  prompt: `You are an expert environmental data scientist specializing in air quality prediction. Your task is to provide a detailed and easy-to-understand 72-hour air quality forecast.
 
-  Based on the historical AQI data and current weather data for the specified location, provide a 24-72 hour air quality forecast.
+Analyze the provided historical data and weather forecast to identify trends and predict future AQI levels.
 
-  Location: {{{location}}}
-  Historical AQI Data: {{{historicalAqiData}}}
-  Weather Data: {{{weatherData}}}
+**Input Data:**
+- **Location:** {{{location}}}
+- **Historical & Current AQI Data:** {{{historicalAqiData}}}
+- **Weather Forecast Data:** {{{weatherData}}}
 
-  Forecast:`,
+**Your Output MUST be in a structured JSON format and include the following:**
+1.  **overallSummary**: A 2-3 sentence high-level summary of what to expect over the next 3 days.
+2.  **healthRecommendations**: Provide 2-3 bullet points with actionable health advice based on the predicted AQI levels. For example, suggest if it's safe for outdoor activities, if masks are needed, etc.
+3.  **dailyForecasts**: An array of predictions for the next 3 days, with each day having:
+    - **day**: The name of the day (e.g., Tomorrow, Wednesday).
+    - **aqi**: The predicted AQI range (e.g., "155-170").
+    - **summary**: A short sentence describing the conditions for that day (e.g., "Air quality will be unhealthy due to increased PM2.5 levels.").
+
+Provide a realistic and scientifically plausible forecast based on the input data. Do not just repeat the input data. Synthesize it to create your prediction.`,
 });
 
 const predictAirQualityFlow = ai.defineFlow(

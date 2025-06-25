@@ -7,9 +7,11 @@ import { BrainCircuit, Loader2, AlertTriangle } from "lucide-react";
 import { getAqiPrediction } from "@/app/actions";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getAqiInfo } from "@/lib/aqi";
+import type { PredictAirQualityOutput } from "@/ai/flows/predict-aqi-flow";
+
 
 export default function AqiForecast({ aqiData, weatherData }: { aqiData: any, weatherData: any }) {
-  const [prediction, setPrediction] = useState("");
+  const [prediction, setPrediction] = useState<PredictAirQualityOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,12 +23,11 @@ export default function AqiForecast({ aqiData, weatherData }: { aqiData: any, we
     const generatePrediction = async () => {
       setIsLoading(true);
       setError(null);
-      setPrediction("");
+      setPrediction(null);
 
       try {
         const location = aqiData.city.name;
         
-        // Create descriptive strings from the available data for the AI model
         const historicalAqiData = `The current AQI is ${aqiData.aqi} which is considered ${getAqiInfo(aqiData.aqi).category}. The dominant pollutant is ${aqiData.dominentpol}. The API's forecast for the next few days suggests average PM2.5 levels will be around ${aqiData.forecast.daily.pm25.map((d: any) => d.avg).join(', ')}.`;
         const weatherDataString = `Current temperature is ${weatherData.list[0].main.temp}°C with ${weatherData.list[0].weather[0].description}. Humidity is at ${weatherData.list[0].main.humidity}%, and wind speed is ${weatherData.list[0].wind.speed} m/s.`;
 
@@ -37,14 +38,15 @@ export default function AqiForecast({ aqiData, weatherData }: { aqiData: any, we
         };
         
         const result = await getAqiPrediction(input);
-        if(result.forecast){
-            setPrediction(result.forecast);
-        } else {
-            setError("The AI model could not generate a forecast with the provided data.");
-        }
+        setPrediction(result);
+
       } catch (e) {
         console.error("Prediction error:", e);
-        setError("Failed to get prediction due to an unexpected error.");
+        if (e instanceof Error) {
+            setError(e.message);
+        } else {
+            setError("Failed to get prediction due to an unexpected error.");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -78,9 +80,26 @@ export default function AqiForecast({ aqiData, weatherData }: { aqiData: any, we
           </Alert>
         )}
         {prediction && !isLoading && !error && (
-          <div className="mt-4 rounded-lg border bg-secondary/50 p-4 text-sm">
-            <h4 className="font-semibold mb-2">AI Forecast:</h4>
-            <p className="text-secondary-foreground whitespace-pre-wrap">{prediction}</p>
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-semibold mb-2">AI Forecast Summary:</h4>
+              <p className="text-sm text-secondary-foreground whitespace-pre-wrap">{prediction.overallSummary}</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Health Recommendations:</h4>
+              <p className="text-sm text-secondary-foreground whitespace-pre-wrap">{prediction.healthRecommendations}</p>
+            </div>
+            <div>
+                <h4 className="font-semibold mb-2">3-Day Outlook:</h4>
+                <div className="space-y-2">
+                    {prediction.dailyForecasts.map((dayForecast, index) => (
+                        <div key={index} className="rounded-lg border bg-secondary/50 p-3 text-sm">
+                            <p className="font-bold">{dayForecast.day}: <span className="font-normal">AQI {dayForecast.aqi}</span></p>
+                            <p className="text-muted-foreground">{dayForecast.summary}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
           </div>
         )}
       </CardContent>
