@@ -1,94 +1,100 @@
 
 "use client";
 
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet.heat';
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { useState, useMemo } from 'react';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { getAqiInfo } from '@/lib/aqi';
+import { cn } from '@/lib/utils';
+import { Search } from 'lucide-react';
 
 interface Station {
+  uid: number;
   lat: number;
   lon: number;
   aqi: string;
+  station: {
+    name: string;
+    time: string;
+  };
 }
-
-interface HeatmapLayerProps {
-  stations: Station[];
-}
-
-// This component adds the heatmap layer to the map instance provided by its parent.
-const HeatmapLayer = ({ stations }: HeatmapLayerProps) => {
-  const map = useMap();
-
-  useEffect(() => {
-    if (!map || stations.length === 0) return;
-
-    // Filter out invalid stations and format data for leaflet.heat
-    // The intensity is the third value in the array. We normalize AQI for better visualization.
-    const points = stations
-      .filter(station => station.lat && station.lon && station.aqi && !isNaN(Number(station.aqi)) && Number(station.aqi) > 0)
-      .map(station => [station.lat, station.lon, Number(station.aqi) / 300]); // Normalize AQI: 300 is a reasonable upper bound for intensity
-
-    const heatLayer = (L as any).heatLayer(points, { 
-        radius: 25, 
-        blur: 15,
-        maxZoom: 12,
-        max: 1.0, // Corresponds to the normalized AQI
-        gradient: {0.1: 'blue', 0.3: 'lime', 0.5: 'yellow', 0.7: 'orange', 1.0: 'red'}
-    });
-
-    map.addLayer(heatLayer);
-
-    // Cleanup function to remove the layer when the component unmounts or stations change
-    return () => {
-      map.removeLayer(heatLayer);
-    };
-    
-
-  }, [map, stations]);
-
-  return null; // This component does not render any visible DOM element itself
-};
-
 
 interface AqiHeatmapProps {
   stations: Station[];
-  isLoading: boolean;
-  error: string | null;
 }
 
-const AqiHeatmap = ({ stations, isLoading, error }: AqiHeatmapProps) => {
+const AqiCard = ({ station }: { station: Station }) => {
+  const aqiValue = parseInt(station.aqi, 10);
+  if (isNaN(aqiValue) || aqiValue < 0) return null;
+
+  const aqiInfo = getAqiInfo(aqiValue);
+
   return (
-    <MapContainer center={[22.5, 83.0]} zoom={5} scrollWheelZoom={true} style={{ height: '100%', width: '100%' }}>
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-      />
-      
-      {isLoading && (
-        <div className="absolute inset-0 z-[1000] bg-muted/50 flex items-center justify-center pointer-events-none">
-          <Skeleton className="h-full w-full" />
+    <Card
+      style={{ backgroundColor: `${aqiInfo.hexColor}40` }} // hex with 25% opacity
+      className={cn('border-2', `border-[${aqiInfo.hexColor}]`)}
+    >
+      <CardContent className="p-3">
+        <div className="flex justify-between items-center">
+          <p className="text-3xl font-bold">{aqiValue}</p>
+          <div
+            className={cn(
+              'px-2 py-1 rounded-full text-xs font-semibold text-white',
+              aqiInfo.colorClass
+            )}
+            style={{ backgroundColor: aqiInfo.hexColor }}
+          >
+            {aqiInfo.category}
+          </div>
         </div>
-      )}
-
-      {error && !isLoading && (
-        <div className="absolute inset-0 z-[1000] bg-muted/50 flex items-center justify-center p-4">
-            <Alert variant="destructive" className="max-w-md text-center">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Data Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
-        </div>
-      )}
-
-      {!isLoading && !error && stations && stations.length > 0 && (
-        <HeatmapLayer stations={stations} />
-      )}
-    </MapContainer>
+        <p className="text-sm font-semibold mt-2 truncate" title={station.station.name}>
+          {station.station.name.split(',')[0]}
+        </p>
+      </CardContent>
+      <CardFooter className="p-2 text-xs text-muted-foreground">
+        <p className="truncate">Updated: {station.station.time}</p>
+      </CardFooter>
+    </Card>
   );
 };
 
-export default AqiHeatmap;
+export default function AqiHeatmap({ stations }: AqiHeatmapProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredStations = useMemo(() => {
+    return stations.filter(
+      (station) =>
+        station.station.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+        station.aqi !== '-' &&
+        !isNaN(parseInt(station.aqi, 10))
+    );
+  }, [stations, searchTerm]);
+
+  return (
+    <div className="space-y-6">
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Filter stations by name..."
+          className="w-full rounded-lg bg-card pl-8"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {filteredStations.length > 0 ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+          {filteredStations.map((station) => (
+            <AqiCard key={station.uid} station={station} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-64 text-center bg-card rounded-lg border border-dashed">
+            <h3 className="text-xl font-semibold">No Stations Found</h3>
+            <p className="text-muted-foreground mt-2">Try adjusting your search term.</p>
+        </div>
+      )}
+    </div>
+  );
+};
