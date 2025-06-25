@@ -1,7 +1,6 @@
 
 "use client";
 
-import "leaflet.heat";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useEffect } from "react";
@@ -23,20 +22,32 @@ const HeatmapLayer = ({ points }: HeatmapLayerProps) => {
   useEffect(() => {
     if (!map || typeof window === 'undefined') return;
 
-    const heatLayer = (L as any).heatLayer(points, {
-        radius: 25,
-        max: 200, // Cap intensity for better visualization
-        blur: 40,
-        gradient: {
-            0.1: '#22c55e', // green
-            0.5: '#facc15', // yellow
-            0.8: '#f97316', // orange
-            1.0: '#ef4444'  // red
-        }
-    }).addTo(map);
+    // We need a variable to hold the layer so we can clean it up.
+    let heatLayer: any;
 
+    // Dynamically import leaflet.heat INSIDE the effect to ensure L is defined
+    import("leaflet.heat").then(() => {
+      // Check if map still exists, as component might have unmounted
+      if (!map) return;
+
+      heatLayer = (L as any).heatLayer(points, {
+          radius: 25,
+          max: 200, // Cap intensity for better visualization
+          blur: 40,
+          gradient: {
+              0.1: '#22c55e', // green
+              0.5: '#facc15', // yellow
+              0.8: '#f97316', // orange
+              1.0: '#ef4444'  // red
+          }
+      }).addTo(map);
+    });
+
+    // Return a cleanup function that will run when the component unmounts or dependencies change
     return () => {
-        map.removeLayer(heatLayer);
+        if (heatLayer) {
+            map.removeLayer(heatLayer);
+        }
     };
   }, [map, points]);
 
