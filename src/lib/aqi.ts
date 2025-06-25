@@ -2,6 +2,7 @@ export type AqiLevel = {
   category: string;
   colorClass: string;
   textColor: string;
+  hexColor: string;
   healthImplications: string;
   cautionaryStatement: string;
 };
@@ -11,6 +12,7 @@ const levels: AqiLevel[] = [
     category: 'Good',
     colorClass: 'bg-aqi-good',
     textColor: 'text-aqi-good',
+    hexColor: '#22c55e',
     healthImplications: 'Air quality is considered satisfactory, and air pollution poses little or no risk.',
     cautionaryStatement: 'Enjoy your usual outdoor activities.',
   },
@@ -18,6 +20,7 @@ const levels: AqiLevel[] = [
     category: 'Moderate',
     colorClass: 'bg-aqi-moderate',
     textColor: 'text-aqi-moderate',
+    hexColor: '#facc15',
     healthImplications: 'Air quality is acceptable; however, for some pollutants there may be a moderate health concern for a very small number of people who are unusually sensitive to air pollution.',
     cautionaryStatement: 'Unusually sensitive people should consider reducing prolonged or heavy exertion.',
   },
@@ -25,6 +28,7 @@ const levels: AqiLevel[] = [
     category: 'Unhealthy for Sensitive Groups',
     colorClass: 'bg-aqi-unhealthy-sensitive',
     textColor: 'text-aqi-unhealthy-sensitive',
+    hexColor: '#f97316',
     healthImplications: 'Members of sensitive groups may experience health effects. The general public is not likely to be affected.',
     cautionaryStatement: 'People with lung disease, older adults and children are at a greater risk from exposure to ozone, whereas persons with heart and lung disease, older adults and children are at greater risk from the presence of particles in the air.',
   },
@@ -32,6 +36,7 @@ const levels: AqiLevel[] = [
     category: 'Unhealthy',
     colorClass: 'bg-aqi-unhealthy',
     textColor: 'text-aqi-unhealthy',
+    hexColor: '#ef4444',
     healthImplications: 'Everyone may begin to experience health effects; members of sensitive groups may experience more serious health effects.',
     cautionaryStatement: 'Everyone should reduce prolonged or heavy exertion. It’s a good idea to take more breaks and do less intense activities.',
   },
@@ -39,6 +44,7 @@ const levels: AqiLevel[] = [
     category: 'Very Unhealthy',
     colorClass: 'bg-aqi-very-unhealthy',
     textColor: 'text-aqi-very-unhealthy',
+    hexColor: '#a855f7',
     healthImplications: 'Health alert: everyone may experience more serious health effects.',
     cautionaryStatement: 'Everyone should avoid all outdoor exertion.',
   },
@@ -46,6 +52,7 @@ const levels: AqiLevel[] = [
     category: 'Hazardous',
     colorClass: 'bg-aqi-hazardous',
     textColor: 'text-aqi-hazardous',
+    hexColor: '#b91c1c',
     healthImplications: 'Health warnings of emergency conditions. The entire population is more likely to be affected.',
     cautionaryStatement: 'Everyone should avoid all physical activity outdoors.',
   },

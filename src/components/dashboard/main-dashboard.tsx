@@ -1,6 +1,5 @@
 
 "use client";
-import AqiMap from "./aqi-map";
 import HistoricalTrendsChart from "./historical-trends-chart";
 import WeatherCard from "./weather-card";
 import HourlyForecast from "./hourly-forecast";
@@ -8,6 +7,13 @@ import SunriseCard from "./sunrise-card";
 import OtherCitiesCard from "./other-cities-card";
 import TodayHighlights from "./today-highlights";
 import { Header } from "../layout/header";
+import dynamic from "next/dynamic";
+import { Skeleton } from "../ui/skeleton";
+
+const AqiMap = dynamic(() => import("./aqi-map"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[580px] w-full" />,
+});
 
 export default function MainDashboard({ aqiData, weatherData }: { aqiData: any, weatherData: any }) {
   return (

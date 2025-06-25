@@ -1,5 +1,12 @@
+"use client";
 
-import AqiMap from "@/components/dashboard/aqi-map";
+import { Skeleton } from "@/components/ui/skeleton";
+import dynamic from "next/dynamic";
+
+const AqiMap = dynamic(() => import("@/components/dashboard/aqi-map"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-[580px] w-full" />,
+});
 
 export default function MapPage() {
   return (

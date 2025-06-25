@@ -1,63 +1,29 @@
 
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Map, Loader2, AlertTriangle } from "lucide-react";
+import { Map as MapIcon, AlertTriangle } from "lucide-react";
 import { getAqiInfo } from "@/lib/aqi";
 import { useEffect, useState } from "react";
 import { getAqiStationsInBounds } from "@/app/actions";
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import { Skeleton } from "../ui/skeleton";
 
 interface StationData {
   uid: number;
   aqi: number;
+  lat: number;
+  lon: number;
   city: string;
-  position: { top: string; left: string };
 }
 
-const AqiMarker = ({ aqi, city, position }: { aqi: number, city: string, position: {top: string, left: string}}) => {
-  const { colorClass } = getAqiInfo(aqi);
-  const displayAqi = aqi > 999 ? '999+' : aqi;
-
-  return (
-    <div
-      className="absolute group transform -translate-x-1/2 -translate-y-1/2"
-      style={{ top: position.top, left: position.left }}
-    >
-      <div className="relative flex flex-col items-center">
-        <div
-          className={`h-7 w-7 rounded-full ${colorClass} border-2 border-white shadow-lg flex items-center justify-center text-white font-bold text-xs`}
-        >
-          {displayAqi}
-        </div>
-        <div className="absolute top-full mt-1.5 hidden group-hover:block transition-all z-10">
-          <div className="bg-card text-card-foreground rounded-md px-2 py-1 text-xs shadow-lg whitespace-nowrap">
-            {city}
-          </div>
-        </div>
-        <div className={`w-2 h-2 ${colorClass} rounded-full absolute top-0 animate-ping`}></div>
-      </div>
-    </div>
-  );
-};
-
-// Bounding box for India for coordinate conversion
+// Bounding box for India
 const INDIA_BOUNDS = {
-  minLat: 8,
-  maxLat: 37,
-  minLon: 68,
-  maxLon: 98,
+    minLat: 8,
+    maxLat: 37,
+    minLon: 68,
+    maxLon: 98,
 };
-
-function convertGeoToPercent(lat: number, lon: number) {
-  const { minLat, maxLat, minLon, maxLon } = INDIA_BOUNDS;
-  const left = ((lon - minLon) / (maxLon - minLon)) * 100;
-  const top = ((maxLat - lat) / (maxLat - minLat)) * 100;
-
-  // Clamp values to be within the map boundaries
-  return {
-    left: `${Math.max(0, Math.min(100, left))}%`,
-    top: `${Math.max(0, Math.min(100, top))}%`,
-  };
-}
 
 export default function AqiMap() {
     const [stations, setStations] = useState<StationData[]>([]);
@@ -85,16 +51,10 @@ export default function AqiMap() {
                             lat: station.lat,
                             lon: station.lon,
                         }))
-                        .filter((station: any) => !isNaN(station.aqi) && station.aqi >= 0)
-                        .map((station: any) => ({
-                            uid: station.uid,
-                            city: station.city,
-                            aqi: station.aqi,
-                            position: convertGeoToPercent(station.lat, station.lon)
-                        }));
+                        .filter((station: any) => !isNaN(station.aqi) && station.aqi >= 0 && station.lat && station.lon);
                     setStations(validStations);
                 } else {
-                    setError(result.message || 'Failed to fetch AQI map data. Please ensure your API key is configured correctly in the .env file.');
+                    setError((result as any).message || 'Failed to fetch AQI map data. Please ensure your API key is configured correctly in the .env file.');
                 }
             } catch (e) {
                 setError('An unexpected error occurred while fetching map data.');
@@ -103,15 +63,27 @@ export default function AqiMap() {
                 setIsLoading(false);
             }
         };
-
         fetchMapData();
     }, []);
+
+  const createAqiIcon = (aqi: number) => {
+      const { hexColor } = getAqiInfo(aqi);
+      const displayAqi = aqi > 999 ? '999+' : aqi;
+
+      return L.divIcon({
+          html: `<div style="background-color: ${hexColor};" class="h-7 w-7 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white font-bold text-xs">${displayAqi}</div>`,
+          className: 'bg-transparent border-0',
+          iconSize: [30, 30],
+          iconAnchor: [15, 30],
+          popupAnchor: [0, -15]
+      });
+  };
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center gap-2">
-            <Map className="w-5 h-5 text-primary" />
+            <MapIcon className="w-5 h-5 text-primary" />
             <CardTitle>Live AQI Map</CardTitle>
         </div>
         <CardDescription>
@@ -119,23 +91,40 @@ export default function AqiMap() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="relative w-full h-[300px] md:h-[450px] rounded-lg overflow-hidden border bg-muted/50">
-          <div className="absolute inset-0">
-             {isLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-card/50">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            )}
-            {error && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/50 p-4">
-                <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
-                <p className="text-destructive text-center">{error}</p>
-              </div>
-            )}
-            {!isLoading && !error && stations.map((loc) => (
-              <AqiMarker key={loc.uid} aqi={loc.aqi} city={loc.city} position={loc.position} />
-            ))}
-          </div>
+        <div className="h-[450px] w-full rounded-lg overflow-hidden border bg-muted">
+          {isLoading ? (
+            <Skeleton className="h-full w-full" />
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+              <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+              <p className="text-destructive text-sm">{error}</p>
+            </div>
+          ) : (
+              <MapContainer 
+                center={[22.5, 83.0]} 
+                zoom={5} 
+                scrollWheelZoom={true} 
+                className="h-full w-full"
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {stations.map((station) => (
+                  <Marker
+                    key={station.uid}
+                    position={[station.lat, station.lon]}
+                    icon={createAqiIcon(station.aqi)}
+                  >
+                    <Popup>
+                      <b>{station.city}</b>
+                      <br />
+                      AQI: {station.aqi}
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+          )}
         </div>
       </CardContent>
     </Card>
