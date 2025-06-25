@@ -19,15 +19,9 @@ export default function MainDashboard({ aqiData, weatherData }: { aqiData: any, 
         <div className="lg:col-span-2 xl:col-span-3 space-y-6">
           <WeatherCard weatherData={weatherData} aqiData={aqiData} />
           <HourlyForecast weatherData={weatherData} />
-          <div id="map">
-            <AqiMap />
-          </div>
-          <div id="trends">
-            <HistoricalTrendsChart />
-          </div>
-          <div id="forecast">
-            <AqiForecast aqiData={aqiData} weatherData={weatherData} />
-          </div>
+          <AqiMap />
+          <HistoricalTrendsChart aqiData={aqiData} />
+          <AqiForecast aqiData={aqiData} weatherData={weatherData} />
         </div>
         {/* Right Sidebar Column */}
         <div className="lg:col-span-1 xl:col-span-1 space-y-6">

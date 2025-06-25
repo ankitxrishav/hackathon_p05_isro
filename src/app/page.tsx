@@ -8,12 +8,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [aqiData, setAqiData] = useState<any>(null);
   const [weatherData, setWeatherData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   const handleFetchData = useCallback((lat: number, lon: number) => {
     setIsLoading(true);
@@ -29,18 +31,23 @@ export default function Home() {
       } else {
         const errorMessage = aqiResult.status === 'rejected' 
           ? (aqiResult.reason as Error).message 
-          : aqiResult.value.data || 'Could not fetch AQI data.';
+          : (aqiResult.value as any).message || aqiResult.value.data || 'Could not fetch AQI data.';
         setError(errorMessage);
         setAqiData(null);
       }
 
-      if (weatherResult.status === 'fulfilled' && weatherResult.value.cod === "200") {
+      if (weatherResult.status === 'fulfilled' && String(weatherResult.value.cod).startsWith("2")) {
         setWeatherData(weatherResult.value);
       } else {
          const errorMessage = weatherResult.status === 'rejected' 
             ? (weatherResult.reason as Error).message 
-            : weatherResult.value.message || 'Could not fetch weather data.';
+            : (weatherResult.value as any).message || 'Could not fetch weather data.';
         console.error("Weather data fetch failed:", errorMessage);
+        toast({
+            variant: "destructive",
+            title: "Weather Data Error",
+            description: errorMessage,
+        });
         setWeatherData(null);
       }
 
@@ -50,7 +57,7 @@ export default function Home() {
     }).finally(() => {
       setIsLoading(false);
     });
-  }, []);
+  }, [toast]);
   
   const getLocation = useCallback(() => {
     setIsLoading(true);
@@ -83,12 +90,13 @@ export default function Home() {
   }, [getLocation]);
 
   return (
-    <main className="flex-1 overflow-auto">
+    <main className="flex-1 overflow-auto bg-secondary/50">
       {isLoading && (
-        <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-6">
+        <div className="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="lg:col-span-2 xl:col-span-3 space-y-6">
             <Skeleton className="h-48 w-full" />
             <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-72 w-full" />
           </div>
           <div className="space-y-6">
             <Skeleton className="h-96 w-full" />
@@ -96,11 +104,11 @@ export default function Home() {
           </div>
         </div>
       )}
-      {error && (
+      {error && !isLoading && (
         <div className="flex flex-col items-center justify-center h-full p-4">
             <Alert variant="destructive" className="max-w-md text-center">
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Location Error</AlertTitle>
+              <AlertTitle>Location & Data Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
             <Button onClick={getLocation} className="mt-4">
