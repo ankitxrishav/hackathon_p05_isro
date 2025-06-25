@@ -1,7 +1,6 @@
 
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Image from "next/image";
 import { Map, Loader2, AlertTriangle } from "lucide-react";
 import { getAqiInfo } from "@/lib/aqi";
 import { useEffect, useState } from "react";
@@ -16,6 +15,7 @@ interface StationData {
 
 const AqiMarker = ({ aqi, city, position }: { aqi: number, city: string, position: {top: string, left: string}}) => {
   const { colorClass } = getAqiInfo(aqi);
+  const displayAqi = aqi > 999 ? '999+' : aqi;
 
   return (
     <div
@@ -24,11 +24,11 @@ const AqiMarker = ({ aqi, city, position }: { aqi: number, city: string, positio
     >
       <div className="relative flex flex-col items-center">
         <div
-          className={`h-6 w-6 rounded-full ${colorClass} border-2 border-white shadow-lg flex items-center justify-center text-white font-bold text-xs`}
+          className={`h-7 w-7 rounded-full ${colorClass} border-2 border-white shadow-lg flex items-center justify-center text-white font-bold text-xs`}
         >
-          {aqi}
+          {displayAqi}
         </div>
-        <div className="absolute top-full mt-1.5 hidden group-hover:block transition-all">
+        <div className="absolute top-full mt-1.5 hidden group-hover:block transition-all z-10">
           <div className="bg-card text-card-foreground rounded-md px-2 py-1 text-xs shadow-lg whitespace-nowrap">
             {city}
           </div>
@@ -94,7 +94,7 @@ export default function AqiMap() {
                         }));
                     setStations(validStations);
                 } else {
-                    setError(result.message || 'Failed to fetch AQI map data.');
+                    setError(result.message || 'Failed to fetch AQI map data. Please ensure your API key is configured correctly in the .env file.');
                 }
             } catch (e) {
                 setError('An unexpected error occurred while fetching map data.');
@@ -119,15 +119,7 @@ export default function AqiMap() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="relative w-full h-[300px] md:h-[450px] rounded-lg overflow-hidden border">
-          <Image
-            src="https://placehold.co/1200x800.png"
-            alt="Map of India"
-            layout="fill"
-            objectFit="cover"
-            className="opacity-50"
-            data-ai-hint="map india"
-          />
+        <div className="relative w-full h-[300px] md:h-[450px] rounded-lg overflow-hidden border bg-muted/50">
           <div className="absolute inset-0">
              {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-card/50">
