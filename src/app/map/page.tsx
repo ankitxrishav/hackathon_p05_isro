@@ -2,19 +2,12 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { getAqiStationsInBounds } from "@/app/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Map as MapIcon } from "lucide-react";
+import { AlertTriangle, Grid3x3 } from "lucide-react";
+import AqiHeatmap from "@/components/dashboard/aqi-heatmap";
 
-// Dynamically import the map component with SSR disabled
-const AqiMap = dynamic(() => import("@/components/dashboard/aqi-map"), {
-  ssr: false,
-  loading: () => <Skeleton className="h-[450px] w-full" />,
-});
-
-// Define the structure for station data
 interface StationData {
   uid: number;
   aqi: number;
@@ -23,7 +16,6 @@ interface StationData {
   city: string;
 }
 
-// Bounding box for India
 const INDIA_BOUNDS = {
     minLat: 8,
     maxLat: 37,
@@ -77,36 +69,36 @@ export default function MapPage() {
       <div className="container mx-auto">
         <div className="space-y-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold">Live AQI Map</h1>
+            <h1 className="text-3xl font-bold">Interactive AQI Heatmap</h1>
             <p className="text-muted-foreground">
-              Real-time air quality visualization across different cities.
+              Color-coded air quality visualization across different cities.
             </p>
           </div>
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                  <MapIcon className="w-5 h-5 text-primary" />
-                  <CardTitle>Live AQI Map</CardTitle>
+                  <Grid3x3 className="w-5 h-5 text-primary" />
+                  <CardTitle>AQI Heatmap</CardTitle>
               </div>
               <CardDescription>
-                Real-time air quality visualization across different cities.
+                Live air quality readings. Filter by city name.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[450px] w-full rounded-lg overflow-hidden border bg-muted relative">
-                <AqiMap stations={stations} />
-                {isLoading && (
-                    <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
-                        <Skeleton className="h-full w-full" />
-                    </div>
-                )}
-                {error && !isLoading && (
-                    <div className="absolute inset-0 bg-background/80 flex flex-col items-center justify-center p-4 text-center z-10">
-                      <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
-                      <p className="text-destructive text-sm">{error}</p>
-                    </div>
-                )}
-              </div>
+              {isLoading && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <Skeleton key={i} className="h-24 w-full" />
+                    ))}
+                  </div>
+              )}
+              {error && !isLoading && (
+                  <div className="bg-background/80 flex flex-col items-center justify-center p-4 text-center z-10">
+                    <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+                    <p className="text-destructive text-sm">{error}</p>
+                  </div>
+              )}
+              {!isLoading && !error && <AqiHeatmap stations={stations} />}
             </CardContent>
           </Card>
         </div>
