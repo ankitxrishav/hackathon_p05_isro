@@ -50,6 +50,14 @@ export async function getWeatherDataForLocation(lat: number, lon: number) {
   return fetchWithToken(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid={OPENWEATHER_API_KEY}&units=metric`, 'OPENWEATHER_API_KEY');
 }
 
+export async function getAqiDataForCity(city: string) {
+  return fetchWithToken(`https://api.waqi.info/feed/${city}/?token={AQI_API_TOKEN}`, 'AQI_API_TOKEN');
+}
+
+export async function getWeatherDataForCity(city: string) {
+  return fetchWithToken(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid={OPENWEATHER_API_KEY}&units=metric`, 'OPENWEATHER_API_KEY');
+}
+
 export async function getAqiStationsInBounds(lat1: number, lon1: number, lat2: number, lon2: number) {
   return fetchWithToken(`https://api.waqi.info/map/bounds/?latlng=${lat1},${lon1},${lat2},${lon2}&token={AQI_API_TOKEN}`, 'AQI_API_TOKEN');
 }

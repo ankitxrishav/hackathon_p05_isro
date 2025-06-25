@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { cn } from '@/lib/utils';
 import { Footer } from '@/components/layout/footer';
 import { PT_Sans } from 'next/font/google';
+import { LocationProvider } from '@/context/LocationContext';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -28,14 +29,16 @@ export default function RootLayout({
     <html lang="en" className={ptSans.variable}>
       <head />
       <body className={cn("font-body antialiased", "bg-background text-foreground")}>
-        <div className="flex min-h-screen w-full">
-          <Sidebar />
-          <div className="flex flex-col flex-1">
-            <main className="flex-1">{children}</main>
-            <Footer />
+        <LocationProvider>
+          <div className="flex min-h-screen w-full">
+            <Sidebar />
+            <div className="flex flex-col flex-1">
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
           </div>
-        </div>
-        <Toaster />
+          <Toaster />
+        </LocationProvider>
       </body>
     </html>
   );

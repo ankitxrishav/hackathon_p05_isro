@@ -1,68 +1,15 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import HistoricalTrendsChart from "@/components/dashboard/historical-trends-chart";
-import { getAqiDataForLocation } from "../actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "@/hooks/use-location";
 
 export default function TrendsPage() {
-  const [aqiData, setAqiData] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const handleFetchData = useCallback(async (lat: number, lon: number) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { data, error } = await getAqiDataForLocation(lat, lon);
-      if (error) {
-        setError(error);
-        setAqiData(null);
-      } else {
-        setAqiData(data);
-      }
-    } catch (e: any) {
-      console.error(e);
-      setError("An unexpected error occurred while fetching data.");
-      setAqiData(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const getLocation = useCallback(() => {
-    setIsLoading(true);
-    setError(null);
-    if (!("geolocation" in navigator)) {
-      setError("Geolocation is not supported by your browser.");
-      setIsLoading(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        handleFetchData(position.coords.latitude, position.coords.longitude);
-      },
-      (geoError) => {
-        let errorMessage;
-        if (geoError.code === geoError.PERMISSION_DENIED) {
-          errorMessage = "Location access denied. To use this app, please enable location permissions for this site in your browser's settings and then click 'Try Again'.";
-        } else {
-          errorMessage = "Unable to retrieve your location. Please ensure location services are enabled on your device and try again.";
-        }
-        setError(errorMessage);
-        setIsLoading(false);
-      }
-    );
-  }, [handleFetchData]);
-
-  useEffect(() => {
-    getLocation();
-  }, [getLocation]);
+  const { aqiData, isLoading, error, refetch } = useLocation();
 
   return (
     <main className="flex-1 p-4 md:p-6 lg:p-8">
@@ -89,7 +36,7 @@ export default function TrendsPage() {
                   <AlertTitle>Location & Data Error</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
-                <Button onClick={getLocation} className="mt-4">
+                <Button onClick={refetch} className="mt-4">
                   <MapPin className="mr-2 h-4 w-4" />
                   Try Again
                 </Button>
