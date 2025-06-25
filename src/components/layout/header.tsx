@@ -15,7 +15,7 @@ export function Header() {
         </div>
         <Link href="/" className="flex items-center gap-2 text-foreground no-underline">
             <Wind className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">BreatheEasy</span>
+            <span className="font-bold text-lg">bxcd project</span>
         </Link>
       </div>
     </header>

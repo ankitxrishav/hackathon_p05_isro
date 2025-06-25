@@ -3,10 +3,11 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Sidebar } from '@/components/layout/sidebar';
 import { cn } from '@/lib/utils';
+import { Footer } from '@/components/layout/footer';
 
 
 export const metadata: Metadata = {
-  title: 'BreatheEasy',
+  title: 'bxcd project',
   description: 'An intuitive air quality and weather visualizer.',
 };
 
@@ -26,7 +27,8 @@ export default function RootLayout({
         <div className="flex min-h-screen w-full">
           <Sidebar />
           <div className="flex flex-col flex-1">
-            {children}
+            <main className="flex-1">{children}</main>
+            <Footer />
           </div>
         </div>
         <Toaster />
