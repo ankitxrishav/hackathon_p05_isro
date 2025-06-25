@@ -9,14 +9,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export type ViewType = 'dashboard' | 'map' | 'trends' | 'forecast';
-
 export default function Home() {
   const [aqiData, setAqiData] = useState<any>(null);
   const [weatherData, setWeatherData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [view, setView] = useState<ViewType>('dashboard');
 
   const handleFetchData = useCallback((lat: number, lon: number) => {
     setIsLoading(true);
@@ -31,10 +28,10 @@ export default function Home() {
         setError(aqiResult.data || 'Could not fetch AQI data.');
       }
 
-      if (weatherResult && weatherResult.status === "ok") {
+      if (weatherResult && weatherResult.cod === "200") { // OpenWeather uses 'cod' for status
         setWeatherData(weatherResult);
       } else {
-        setError(weatherResult.data || 'Could not fetch weather data.');
+        setError(weatherResult.message || 'Could not fetch weather data.');
       }
     }).catch(e => {
       console.error(e);
@@ -68,9 +65,9 @@ export default function Home() {
     getLocation();
   }, [getLocation]);
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
+  return (
+    <main className="flex-1 overflow-auto">
+      {isLoading && (
         <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">
             <Skeleton className="h-48 w-full" />
@@ -81,11 +78,8 @@ export default function Home() {
             <Skeleton className="h-72 w-full" />
           </div>
         </div>
-      );
-    }
-
-    if (error) {
-      return (
+      )}
+      {error && (
         <div className="flex flex-col items-center justify-center h-full p-4">
             <Alert variant="destructive" className="max-w-md text-center">
               <AlertTriangle className="h-4 w-4" />
@@ -97,30 +91,10 @@ export default function Home() {
               Try Again
             </Button>
         </div>
-      );
-    }
-    
-    if (aqiData && weatherData) {
-      // In a real app, you would switch views based on the `view` state
-      // For this step, we are only building the main dashboard.
-      switch (view) {
-        case 'dashboard':
-          return <MainDashboard aqiData={aqiData} weatherData={weatherData} />;
-        // case 'map':
-        //   return <AqiMap />;
-        // case 'trends':
-        //   return <HistoricalTrendsChart />;
-        default:
-          return <MainDashboard aqiData={aqiData} weatherData={weatherData} />;
-      }
-    }
-    
-    return null;
-  };
-
-  return (
-    <main className="flex-1 overflow-auto">
-      {renderContent()}
+      )}
+      {!isLoading && !error && aqiData && weatherData && (
+        <MainDashboard aqiData={aqiData} weatherData={weatherData} />
+      )}
     </main>
   );
 }

@@ -17,7 +17,7 @@ export async function getAqiPrediction(input: PredictAirQualityInput): Promise<P
   }
 }
 
-async function fetchWithToken(url: string, token: string | undefined, tokenName: string) {
+async function fetchWithToken(url: string, token: string | undefined, tokenName: string, isJson: boolean = true) {
   if (!token) {
     const errorMessage = `${tokenName} is not set in the .env file.`;
     console.error(errorMessage);
@@ -27,15 +27,15 @@ async function fetchWithToken(url: string, token: string | undefined, tokenName:
   try {
     const response = await fetch(url);
     if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = isJson ? await response.json() : await response.text();
         console.error(`API Error for ${tokenName}: ${response.status}`, errorData);
-        return { status: 'error', data: errorData.data || `Failed to fetch data from API. Status: ${response.status}` };
+        return { status: 'error', cod: response.status, message: errorData?.data || errorData?.message || `Failed to fetch data from API. Status: ${response.status}` };
     }
     const data = await response.json();
     return data;
   } catch (error) {
     console.error(`Error fetching from ${tokenName} API:`, error);
-    return { status: 'error', data: 'An unexpected error occurred while fetching data.' };
+    return { status: 'error', cod: '500', message: 'An unexpected error occurred while fetching data.' };
   }
 }
 

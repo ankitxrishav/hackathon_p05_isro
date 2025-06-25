@@ -3,15 +3,15 @@
 
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
-import { Wind, LayoutDashboard, Map, BarChart3, Calendar, Settings, LogOut } from 'lucide-react';
+import { Wind, LayoutDashboard, Map, BarChart3, BrainCircuit, Settings, LogOut } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 const navLinks = [
-  { href: '#dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '#map', label: 'Map', icon: Map },
-  { href: '#trends', label: 'Trends', icon: BarChart3 },
-  { href: '#calendar', label: 'Calendar', icon: Calendar },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/map', label: 'Map', icon: Map },
+  { href: '/trends', label: 'Trends', icon: BarChart3 },
+  { href: '/forecast', label: 'Forecast', icon: BrainCircuit },
 ];
 
 const bottomLinks = [
@@ -24,6 +24,7 @@ export function Sidebar() {
 
   const renderLink = (link: any, index: number) => {
     const Icon = link.icon;
+    const isActive = pathname === link.href;
     return (
         <TooltipProvider key={index} delayDuration={0}>
             <Tooltip>
@@ -32,7 +33,7 @@ export function Sidebar() {
                         href={link.href}
                         className={cn(
                           "flex items-center justify-center h-12 w-12 rounded-lg transition-colors hover:bg-primary/20 hover:text-primary",
-                          pathname === link.href ? "bg-primary/20 text-primary" : "text-muted-foreground"
+                          isActive ? "bg-primary/20 text-primary" : "text-muted-foreground"
                         )}
                     >
                         <Icon className="h-6 w-6" />
