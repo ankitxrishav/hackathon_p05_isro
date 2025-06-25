@@ -1,5 +1,8 @@
 
 "use client";
+import AqiForecast from "./aqi-forecast";
+import AqiMap from "./aqi-map";
+import HistoricalTrendsChart from "./historical-trends-chart";
 import WeatherCard from "./weather-card";
 import HourlyForecast from "./hourly-forecast";
 import SunriseCard from "./sunrise-card";
@@ -16,7 +19,15 @@ export default function MainDashboard({ aqiData, weatherData }: { aqiData: any, 
         <div className="lg:col-span-2 xl:col-span-3 space-y-6">
           <WeatherCard weatherData={weatherData} aqiData={aqiData} />
           <HourlyForecast weatherData={weatherData} />
-          {/* In a real app, more components like a detailed forecast would go here */}
+          <div id="map">
+            <AqiMap />
+          </div>
+          <div id="trends">
+            <HistoricalTrendsChart />
+          </div>
+          <div id="forecast">
+            <AqiForecast />
+          </div>
         </div>
         {/* Right Sidebar Column */}
         <div className="lg:col-span-1 xl:col-span-1 space-y-6">

@@ -55,7 +55,11 @@ export default function Home() {
         handleFetchData(position.coords.latitude, position.coords.longitude);
       },
       (geoError) => {
-        setError("Unable to retrieve your location. Please grant permission and try again.");
+        let errorMessage = "Unable to retrieve your location. Please grant permission and try again.";
+        if (geoError.code === geoError.PERMISSION_DENIED) {
+            errorMessage = "Location access was denied. To use this feature, please enable location permissions for this site in your browser settings and then try again."
+        }
+        setError(errorMessage);
         setIsLoading(false);
       }
     );
@@ -83,7 +87,7 @@ export default function Home() {
         <div className="flex flex-col items-center justify-center h-full p-4">
             <Alert variant="destructive" className="max-w-md text-center">
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
+              <AlertTitle>Location Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
             <Button onClick={getLocation} className="mt-4">

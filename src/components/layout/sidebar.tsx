@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 const navLinks = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/map', label: 'Map', icon: Map },
-  { href: '/trends', label: 'Trends', icon: BarChart3 },
-  { href: '/forecast', label: 'Forecast', icon: BrainCircuit },
+  { href: '/#', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/#map', label: 'Map', icon: Map },
+  { href: '/#trends', label: 'Trends', icon: BarChart3 },
+  { href: '/#forecast', label: 'Forecast', icon: BrainCircuit },
 ];
 
 const bottomLinks = [
@@ -24,7 +24,7 @@ export function Sidebar() {
 
   const renderLink = (link: any, index: number) => {
     const Icon = link.icon;
-    const isActive = pathname === link.href;
+    const isActive = pathname === link.href.replace(/#.*$/, ''); // Check against base path for active state
     return (
         <TooltipProvider key={index} delayDuration={0}>
             <Tooltip>
@@ -33,7 +33,7 @@ export function Sidebar() {
                         href={link.href}
                         className={cn(
                           "flex items-center justify-center h-12 w-12 rounded-lg transition-colors hover:bg-primary/20 hover:text-primary",
-                          isActive ? "bg-primary/20 text-primary" : "text-muted-foreground"
+                          isActive && (link.href === '/#' || link.href === '/') ? "bg-primary/20 text-primary" : "text-muted-foreground"
                         )}
                     >
                         <Icon className="h-6 w-6" />
